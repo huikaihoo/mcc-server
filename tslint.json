@@ -1,0 +1,25 @@
+{
+  "extends": [
+    "tslint:recommended",
+    "tslint-config-airbnb",
+    "tslint-config-prettier"
+  ],
+  "//": "Can be just set to true if this is fixed: https://github.com/palantir/tslint/issues/4513",
+  "jsRules": {
+    "no-increment-decrement": false,
+    "max-classes-per-file": false,
+    "no-console": [true, "info", "log", "time", "timeEnd", "trace"],
+    "object-literal-sort-keys": false,
+    "variable-name": [true, "check-format", "allow-pascal-case", "allow-leading-underscore"]
+  },
+  "rules": {
+    "no-increment-decrement": false,
+    "max-classes-per-file": false,
+    "array-type": [true, "array"],
+    "import-name": false,
+    "no-empty-interface": false,
+    "no-console": false,
+    "object-literal-sort-keys": false,
+    "variable-name": [true, "check-format", "allow-pascal-case", "allow-leading-underscore"]
+  }
+}
