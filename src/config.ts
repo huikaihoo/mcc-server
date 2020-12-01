@@ -14,6 +14,6 @@ const config: IConfig = {
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET || 'r_secret',
   accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES || '3m',
   refreshTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES || '1d',
-}
+};
 
 export default config;

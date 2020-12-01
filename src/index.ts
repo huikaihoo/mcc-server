@@ -1,25 +1,13 @@
-import express from 'express';
-import passport from 'passport';
-
-import auth from './auth';
+import app from './app';
 import config from './config';
+import db from './db';
 
-const app = express();
-app.use(express.json());
+const main = async () => {
+  await db.initDB();
 
-app.get('/', (req, res) => {
-  res.json('Hello World');
-});
-
-app.get('/clinic', passport.authenticate('token', { session: false }), (req: any, res) => {
-  res.json({
-    id: req.user.id,
-    username: req.user.username,
+  app.listen(config.port, () => {
+    console.log(`Server started at port ${config.port}`);
   });
-});
+};
 
-app.post('/signin', passport.authenticate('local', { session: false }), auth);
-
-app.listen(config.port, () => {
-  console.log(`Server started at port ${config.port}`);
-});
+main();
