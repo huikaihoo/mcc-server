@@ -8,6 +8,17 @@ import passport from 'passport';
 import auth from './auth';
 import config from './config';
 import user from './routes/user';
+import consultation from './routes/consultation';
+
+const routeHandler = (handler: any) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await handler(req, res);
+    } catch (err) {
+      next(err);
+    }
+  };
+};
 
 const swaggerOptions: swaggerJsDoc.Options = {
   swaggerDefinition: {
@@ -46,7 +57,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 /**
  * @swagger
  * definitions:
- *   Signin:
+ *   SigninReq:
  *     type: object
  *     required:
  *       - email
@@ -56,7 +67,12 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *         type: string
  *       password:
  *         type: string
- *   CreateUser:
+ *   SigninRes:
+ *     type: object
+ *     properties:
+ *       accessToken:
+ *         type: string
+ *   CreateUserReq:
  *     type: object
  *     required:
  *       - email
@@ -75,7 +91,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *         type: string
  *       address:
  *         type: string
- *   GetUser:
+ *   GetUserRes:
  *     type: object
  *     properties:
  *       email:
@@ -86,6 +102,64 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
  *         type: string
  *       address:
  *         type: string
+ *   CreateConsultationReq:
+ *     type: object
+ *     required:
+ *       - doctorName
+ *       - patientName
+ *       - diagnosis
+ *       - medication
+ *       - fee
+ *       - datetime
+ *       - followUp
+ *     properties:
+ *       doctorName:
+ *         type: string
+ *       patientName:
+ *         type: string
+ *       diagnosis:
+ *         type: string
+ *       medication:
+ *         type: string
+ *       fee:
+ *         type: number
+ *       datetime:
+ *         type: string
+ *       followUp:
+ *         type: string
+ *   CreateConsultationRes:
+ *     type: object
+ *     properties:
+ *       id:
+ *         type: string
+ *   GetConsultationRes:
+ *     type: object
+ *     properties:
+ *       id:
+ *         type: string
+ *       doctorName:
+ *         type: string
+ *       patientName:
+ *         type: string
+ *       diagnosis:
+ *         type: string
+ *       medication:
+ *         type: string
+ *       fee:
+ *         type: number
+ *       datetime:
+ *         type: string
+ *       followUp:
+ *         type: string
+ *   GetConsultationsRes:
+ *     type: object
+ *     properties:
+ *       total:
+ *         type: number
+ *       results:
+ *         type: array
+ *         items:
+ *           $ref: '#/definitions/GetConsultationRes'
  */
 
 /**
@@ -113,14 +187,18 @@ app.get('/health', (req: Request, res: Response) => {
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/definitions/Signin'
+ *            $ref: '#/definitions/SigninReq'
  *    responses:
  *      '200':
  *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/definitions/SigninRes'
  *      '401':
  *        description: Unauthorized
  */
-app.post('/v1/signin', passport.authenticate('local', { session: false }), auth);
+app.post('/v1/signin', passport.authenticate('local', { session: false }), routeHandler(auth));
 
 /**
  * @swagger
@@ -134,14 +212,14 @@ app.post('/v1/signin', passport.authenticate('local', { session: false }), auth)
  *      content:
  *        application/json:
  *          schema:
- *            $ref: '#/definitions/CreateUser'
+ *            $ref: '#/definitions/CreateUserReq'
  *    responses:
  *      '201':
  *        description: Created
  *      '400':
  *        description: Bad Request
  */
-app.post('/v1/user', user.create);
+app.post('/v1/user', routeHandler(user.create));
 
 /**
  * @swagger
@@ -156,13 +234,94 @@ app.post('/v1/user', user.create);
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/definitions/GetUser'
+ *              $ref: '#/definitions/GetUserRes'
  *      '401':
  *        description: Unauthorized
  *      '404':
  *        description: Not Found
  */
-app.get('/v1/user', passport.authenticate('token', { session: false }), user.getById);
+app.get('/v1/user', passport.authenticate('token', { session: false }), routeHandler(user.getById));
+
+/**
+ * @swagger
+ * /v1/consultation:
+ *  post:
+ *    summary: Create new consultation record
+ *    security:
+ *      - bearerAuth: []
+ *    consumes:
+ *      - application/json
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/definitions/CreateConsultationReq'
+ *    responses:
+ *      '201':
+ *        description: Created
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/definitions/CreateConsultationRes'
+ *      '400':
+ *        description: Bad Request
+ */
+app.post('/v1/consultation', passport.authenticate('token', { session: false }), routeHandler(consultation.create));
+
+/**
+ * @swagger
+ * /v1/consultation/{consultationId}:
+ *  get:
+ *    summary: Get consultation record by id
+ *    security:
+ *      - bearerAuth: []
+ *    parameters:
+ *      - in: path
+ *        name: consultationId
+ *        required: true
+ *        schema:
+ *          type: string
+ *      - in: query
+ *        name: offset
+ *        schema:
+ *          type: number
+ *      - in: query
+ *        name: limit
+ *        schema:
+ *          type: number
+ *    responses:
+ *      '200':
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/definitions/GetConsultationRes'
+ *      '401':
+ *        description: Unauthorized
+ *      '404':
+ *        description: Not Found
+ */
+app.get('/v1/consultation/:consultationId', passport.authenticate('token', { session: false }), routeHandler(consultation.getById));
+
+/**
+ * @swagger
+ * /v1/consultations:
+ *  get:
+ *    summary: Get consultation records
+ *    security:
+ *      - bearerAuth: []
+ *    responses:
+ *      '200':
+ *        description: OK
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/definitions/GetConsultationsRes'
+ *      '401':
+ *        description: Unauthorized
+ */
+app.get('/v1/consultations', passport.authenticate('token', { session: false }), routeHandler(consultation.getList));
 
 // Exception Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

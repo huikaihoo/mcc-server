@@ -13,7 +13,7 @@ const clinic = (sequelize: Sequelize) => {
       type: DataTypes.STRING,
       unique: false,
       validate: {
-        is: /^$|\s+/,
+        is: /^[\w\- ]+$/,
       },
     },
     phone: {
@@ -21,13 +21,16 @@ const clinic = (sequelize: Sequelize) => {
       type: DataTypes.STRING,
       unique: false,
       validate: {
-        is: /^[0-9]{8}$/,
+        is: /^[1-9][0-9]{7}$/,
       },
     },
     address: {
       allowNull: false,
       type: DataTypes.STRING,
       unique: false,
+      validate: {
+        notEmpty: true,
+      },
     },
   });
 };

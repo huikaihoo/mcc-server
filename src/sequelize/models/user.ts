@@ -13,13 +13,16 @@ const user = (sequelize: Sequelize) => {
       type: DataTypes.STRING,
       unique: true,
       validate: {
-        is: /\S+@\S+\.\S+/,
+        isEmail: true,
       },
     },
     password: {
       allowNull: false,
       type: DataTypes.STRING,
       unique: false,
+      validate: {
+        notEmpty: true,
+      },
     },
   });
 };

@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import validate from 'uuid-validate';
 import passport from 'passport';
 import passportJWT from 'passport-jwt';
 import passportLocal from 'passport-local';
@@ -16,6 +17,10 @@ const extractJWT = passportJWT.ExtractJwt;
 const checkPassword = async (user: any, password: any): Promise<any> => {
   const isMatch = user?.password ? await bcrypt.compare(password, user.password) : false;
   return isMatch ? user : null;
+};
+
+const checkJwtPayload = (jwtPayload: any) => {
+  return jwtPayload.id && jwtPayload.clinicId && validate(jwtPayload.id) && validate(jwtPayload.clinicId);
 };
 
 // Auth for login
@@ -50,12 +55,16 @@ passport.use(
       secretOrKey: config.accessTokenSecret,
     },
     (jwtPayload, done) => {
-      models.user
-        .findByPk(jwtPayload.id, {
-          attributes: ['id', 'clinicId', 'email'],
-        })
-        .then(user => done(null, user))
-        .catch(err => done(err));
+      if (checkJwtPayload(jwtPayload)) {
+        models.user
+          .findByPk(jwtPayload.id, {
+            attributes: ['id', 'clinicId', 'email'],
+          })
+          .then(user => done(null, user))
+          .catch(err => done(err));
+      } else {
+        done({ status: 401 });
+      }
     }
   )
 );
