@@ -1,11 +1,12 @@
 import { Sequelize } from 'sequelize';
 
+import config from '../config';
 import setup from './setup';
 import clinic from './models/clinic';
 import user from './models/user';
 import consultation from './models/consultation';
 
-const sequelize = new Sequelize('postgres://admin:password@localhost:5432/db');
+const sequelize = new Sequelize(config.dbUri);
 
 const modelDefiners = [user, clinic, consultation];
 

@@ -29,7 +29,7 @@ const swaggerOptions: swaggerJsDoc.Options = {
     },
     servers: [
       {
-        url: `http://localhost:${config.port}`,
+        url: `${config.host}:${config.port}`,
       },
     ],
   },
@@ -195,6 +195,8 @@ app.get('/health', (req: Request, res: Response) => {
  *          application/json:
  *            schema:
  *              $ref: '#/definitions/SigninRes'
+ *      '400':
+ *        description: Bad Request
  *      '401':
  *        description: Unauthorized
  */

@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import config from '../config';
 import sequelize from '../sequelize';
 
-const models = sequelize.models;
+const { models } = sequelize;
 
 const getById = async (req: any, res: any) => {
   const clinic = await models.clinic.findByPk(req.user.clinicId, {

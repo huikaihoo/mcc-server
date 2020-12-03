@@ -1,7 +1,7 @@
 import validate from 'uuid-validate';
 import sequelize from '../sequelize';
 
-const models = sequelize.models;
+const { models } = sequelize;
 
 const getById = async (req: any, res: any) => {
   if (!validate(req.params.consultationId)) {

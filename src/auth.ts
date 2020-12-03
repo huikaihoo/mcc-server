@@ -8,7 +8,7 @@ import passportLocal from 'passport-local';
 import config from './config';
 import sequelize from './sequelize';
 
-const models = sequelize.models;
+const { models } = sequelize;
 
 const LocalStrategy = passportLocal.Strategy;
 const JWTStrategy = passportJWT.Strategy;
