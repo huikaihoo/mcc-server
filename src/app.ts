@@ -1,9 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import morgan from 'morgan';
 import bodyParser from 'body-parser';
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import passport from 'passport';
+import { checkSchema, validationResult } from 'express-validator';
 
 import auth from './auth';
 import config from './config';
@@ -13,7 +15,12 @@ import consultation from './routes/consultation';
 const routeHandler = (handler: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await handler(req, res);
+      const result = validationResult(req);
+      if (!result.isEmpty()) {
+        res.status(400).json({ errors: result.array() });
+      } else {
+        await handler(req, res);
+      }
     } catch (err) {
       next(err);
     }
@@ -43,6 +50,11 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+if (config.enableCors) {
+  app.use(cors());
+  app.options('*', cors());
+}
 
 /**
  * @swagger
@@ -284,14 +296,6 @@ app.post('/v1/consultation', passport.authenticate('token', { session: false }),
  *        required: true
  *        schema:
  *          type: string
- *      - in: query
- *        name: offset
- *        schema:
- *          type: number
- *      - in: query
- *        name: limit
- *        schema:
- *          type: number
  *    responses:
  *      '200':
  *        description: OK
@@ -304,7 +308,17 @@ app.post('/v1/consultation', passport.authenticate('token', { session: false }),
  *      '404':
  *        description: Not Found
  */
-app.get('/v1/consultation/:consultationId', passport.authenticate('token', { session: false }), routeHandler(consultation.getById));
+app.get(
+  '/v1/consultation/:consultationId',
+  passport.authenticate('token', { session: false }),
+  checkSchema({
+    consultationId: {
+      in: ['params'],
+      isUUID: { options: 4 },
+    },
+  }),
+  routeHandler(consultation.getById)
+);
 
 /**
  * @swagger
@@ -313,6 +327,23 @@ app.get('/v1/consultation/:consultationId', passport.authenticate('token', { ses
  *    summary: Get consultation records
  *    security:
  *      - bearerAuth: []
+ *    parameters:
+ *      - in: query
+ *        name: offset
+ *        schema:
+ *          type: number
+ *      - in: query
+ *        name: limit
+ *        schema:
+ *          type: number
+ *      - in: query
+ *        name: from
+ *        schema:
+ *          type: number
+ *      - in: query
+ *        name: to
+ *        schema:
+ *          type: number
  *    responses:
  *      '200':
  *        description: OK
@@ -320,10 +351,38 @@ app.get('/v1/consultation/:consultationId', passport.authenticate('token', { ses
  *          application/json:
  *            schema:
  *              $ref: '#/definitions/GetConsultationsRes'
+ *      '400':
+ *        description: Bad Request
  *      '401':
  *        description: Unauthorized
  */
-app.get('/v1/consultations', passport.authenticate('token', { session: false }), routeHandler(consultation.getList));
+app.get(
+  '/v1/consultations',
+  passport.authenticate('token', { session: false }),
+  checkSchema({
+    offset: {
+      in: ['query'],
+      optional: true,
+      isInt: { options: { min: 0 } },
+    },
+    limit: {
+      in: ['query'],
+      optional: true,
+      isInt: { options: { min: 0, max: 100 } },
+    },
+    from: {
+      in: ['query'],
+      optional: true,
+      isInt: { options: { min: 0 } },
+    },
+    to: {
+      in: ['query'],
+      optional: true,
+      isInt: { options: { min: 0 } },
+    },
+  }),
+  routeHandler(consultation.getList)
+);
 
 // Exception Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

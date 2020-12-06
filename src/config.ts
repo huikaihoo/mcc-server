@@ -13,6 +13,7 @@ const getDBUri = () => {
 
 export interface IConfig {
   nodeEnv: string;
+  enableCors: boolean;
   host: string;
   port: string;
   saltRounds: number;
@@ -25,6 +26,7 @@ export interface IConfig {
 
 const config: IConfig = {
   nodeEnv: process.env.NODE_ENV || '',
+  enableCors: process.env.ENABLE_CORS === 'true',
   host: process.env.HOST || 'http://localhost',
   port: process.env.PORT || '3000',
   saltRounds: parseInt(process.env.SALT_ROUNDS || '10', 10),

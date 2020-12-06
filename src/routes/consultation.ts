@@ -1,14 +1,11 @@
-import validate from 'uuid-validate';
+import moment from 'moment';
+import { Op } from 'sequelize';
+
 import sequelize from '../sequelize';
 
 const { models } = sequelize;
 
 const getById = async (req: any, res: any) => {
-  if (!validate(req.params.consultationId)) {
-    res.status(404).send();
-    return;
-  }
-
   const consultation = await models.consultation.findByPk<any>(req.params.consultationId, {
     attributes: ['id', 'clinicId', 'doctorName', 'patientName', 'diagnosis', 'medication', 'fee', 'datetime', 'followUp'],
     raw: true,
@@ -23,13 +20,24 @@ const getById = async (req: any, res: any) => {
 };
 
 const getList = async (req: any, res: any) => {
-  // TODO: query support from and to datetime
-  const { offset, limit } = req.query;
+  const { offset, limit, from, to } = req.query;
+  const where: any = {};
+
+  if (from || to) {
+    where.datetime = {};
+    if (from) {
+      where.datetime[Op.gte] = moment.unix(from).toDate();
+    }
+    if (to) {
+      where.datetime[Op.lte] = moment.unix(to).toDate();
+    }
+  }
 
   const consultations = await models.consultation.findAndCountAll({
     attributes: ['id', 'doctorName', 'patientName', 'diagnosis', 'medication', 'fee', 'datetime', 'followUp'],
     where: {
       clinicId: req.user.clinicId,
+      ...where,
     },
     order: ['datetime', 'createdAt'],
     offset: offset || 0,
@@ -37,14 +45,10 @@ const getList = async (req: any, res: any) => {
     raw: true,
   });
 
-  if (consultations) {
-    res.status(200).json({
-      total: consultations.count,
-      results: consultations.rows,
-    });
-  } else {
-    res.status(404).send();
-  }
+  res.status(200).json({
+    total: consultations.count || 0,
+    results: consultations.rows || [],
+  });
 };
 
 const create = async (req: any, res: any) => {

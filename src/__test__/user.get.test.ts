@@ -39,6 +39,7 @@ describe('GET /v1/user', () => {
       });
     }
   });
+
   test('response 200 [success]', async () => {
     const jwt = await login(usersReterive[0]);
     const { password, ...target } = usersReterive[0];
