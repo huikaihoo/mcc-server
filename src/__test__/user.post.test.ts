@@ -116,6 +116,25 @@ describe('POST /v1/user', () => {
     expect(clinicCount).toEqual(1);
   });
 
+  test('response 400 [invalid password]', async () => {
+    const response = await request(app)
+      .post(path)
+      .set('Content-Type', 'application/json')
+      .send({
+        ...usersReterive[0],
+        password: invalidUser.password,
+      });
+    expect(response.status).toBe(400);
+    console.log(response.body);
+
+    // Check database record count
+    const userCount = await models.user.count();
+    expect(userCount).toEqual(1);
+
+    const clinicCount = await models.clinic.count();
+    expect(clinicCount).toEqual(1);
+  });
+
   test('response 400 [missing email]', async () => {
     const response = await request(app)
       .post(path)

@@ -233,7 +233,16 @@ app.post('/v1/signin', passport.authenticate('local', { session: false }), route
  *      '400':
  *        description: Bad Request
  */
-app.post('/v1/user', routeHandler(user.create));
+app.post(
+  '/v1/user',
+  checkSchema({
+    password: {
+      in: ['body'],
+      isHash: { options: 'sha512' },
+    },
+  }),
+  routeHandler(user.create)
+);
 
 /**
  * @swagger
