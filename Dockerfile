@@ -1,4 +1,4 @@
-FROM node:10.23-alpine
+FROM node:15.3-alpine
 
 WORKDIR /mcc-server
 ADD package.json ./package.json
